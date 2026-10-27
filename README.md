@@ -11,6 +11,7 @@ Portable browser profile manager for Windows and macOS, created by Antonio Fradi
 - Encrypted session sharing, bookmarks, history, downloads and startup page restoration.
 - Eleven interface languages, with English selected by default.
 - Startup progress while validating/extracting the Windows runtime and opening the workspace.
+- Nine accessible social links in the author menu, with local SVG icons and fixed HTTPS destinations.
 
 This is an independent application. Complete equivalence with every Logii or Chromium feature is not claimed.
 
@@ -46,6 +47,8 @@ Packaging entry points:
 - `prepare-macos.mjs`, `build-macos.py`, `build-macos-unified.py`, `build-macos-single.py`, `build-macos-portable.py`: Mac runtime preparation and successive bundle formats.
 - `refresh-macos-artwork.py`: incremental update from a verified prior Mac portable package; it deliberately requires that base artifact.
 - `verify-windows-single-file.py`, `verify-startup-progress.py`: execution, persistence, integrity and startup checks for the delivered EXE.
+
+The 0.21.3 social menu was checked in bundled Chromium with a local IPC fixture across eleven languages, two themes and two layouts. Electron execution in the current AppContainer was blocked by Windows ACL constraints; a normal-host Electron rerun remains pending. The new Mac ZIP retains the same native runtime binaries and all 38 symbolic links.
 
 Some packaging and compatibility tests use locally prepared toolchains, prior verified delivery archives, or the separately supplied Windows & Mac Software Builder. They are not self-contained fresh-checkout tests. Generated verification reports and development caches are excluded from this public backup.
 

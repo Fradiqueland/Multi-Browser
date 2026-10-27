@@ -1,3 +1,4 @@
+import {runAuthorSocialSmoke} from './author-social-smoke.mjs';
 import {capturePage} from './capture-page.mjs';
 import {portableDirectory} from './platform.mjs';
 import {decryptBundle} from './core.mjs';
@@ -18,6 +19,11 @@ export async function runSmoke({app,store,manager,sessionFor,openProfile,browser
  async function loaded(wc){if(wc.getURL()&&!wc.isLoading())return;await Promise.race([once(wc,'did-finish-load'),new Promise((_,reject)=>setTimeout(()=>reject(Error('Pagina nao carregou')),15000))]);}
  try{
  await loaded(manager.webContents);
+ await runAuthorSocialSmoke({manager,store,actions,dataRoot,check});
+ if(process.argv.includes('--social-links-only')){
+  writeFileSync(join(dataRoot,'smoke-result.json'),JSON.stringify({ok:true,engine:process.versions.electron,scope:'author-social-links',tests:results},null,2));
+  return;
+ }
  check('Gestor com preload seguro',await manager.webContents.executeJavaScript("document.querySelector('h1').textContent==='Browser profiles' && document.documentElement.lang==='en' && typeof window.desktop.request==='function' && typeof require==='undefined'"));
  check('Idiomas pedidos incluidos no seletor',await manager.webContents.executeJavaScript("['en','pt','es','fr','hi','ar','zh','bn','ru','id'].every(id=>[...document.querySelector('#ui-language').options].some(o=>o.value===id))"));
  check('Fotografia e autoria incluidas no pacote',await manager.webContents.executeJavaScript("document.querySelector('#author-photo').complete && document.querySelector('#author-photo').naturalWidth===1024 && document.querySelector('#author-name').textContent==='Antonio Fradique' && document.querySelector('#author-products').getAttribute('href')==='https://AntonioFradique.net'"));

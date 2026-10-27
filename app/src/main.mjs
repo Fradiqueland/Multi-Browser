@@ -1,3 +1,4 @@
+import {authorSocialURL} from './author-social.mjs';
 import {startupProgress} from './startup-progress.mjs';
 import {ProfileTasks} from './profile-tasks.mjs';
 import {commitProfileImport,stageProfileImport} from './profile-import.mjs';
@@ -357,6 +358,7 @@ function browserMenu(record){
 const actions={
  appearance:d=>{if(!['modern','classic'].includes(d.appearance))throw Error('Estilo de interface invalido.');store.state.settings.appearance=d.appearance;store.save();broadcast();return state();},
  authorWebsite:async()=>{await shell.openExternal('https://AntonioFradique.net');return {opened:true};},
+ authorSocial:async d=>{await shell.openExternal(authorSocialURL(d.id));return {opened:true};},
  language:d=>{if(!validLanguage(d.language))throw Error('Idioma da interface invalido.');store.state.settings.language=normalizeLanguage(d.language);store.save();broadcast();return state();},
  nativePage:async d=>{profileTasks.assertIdle(d.id);const p=store.get(d.id);if(!p.engine||p.engine==='embedded')throw Error('Escolha um motor Chromium completo neste perfil.');if(d.page==='store')await nativeBrowsers.extensionStore(p);else await nativeBrowsers.page(p,d.page);return {opened:true};},
  downloadAction:d=>{const item=downloads.get(d.id);if(d.action==='reveal'){const record=store.state.downloads.find(x=>x.id===d.id);if(record?.path)shell.showItemInFolder(record.path);return {ok:true};}if(!item)throw Error('Transferencia terminada.');if(d.action==='cancel')item.cancel();else if(d.action==='pause')item.pause();else if(d.action==='resume'&&(item.isPaused()||item.canResume()))item.resume();return {ok:true};},

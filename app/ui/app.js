@@ -1,3 +1,4 @@
+import {mountSocialLinks} from './social-links.mjs';
 import {profileGroups,groupNames} from '../src/groups.mjs';
 import {t,f,localizeDocument,LANGUAGES,DEFAULT_LANGUAGE} from './i18n.mjs';
 import {profilePage,recordPage,groupPage,normalizeSearch} from '../src/query.mjs';
@@ -5,6 +6,7 @@ const $=s=>document.querySelector(s);
 $('#ui-language').replaceChildren(...LANGUAGES.map(({id,name})=>new Option(name,id)));
 const applyLanguage=localizeDocument(document);applyLanguage(DEFAULT_LANGUAGE);
 $('#author-products').onclick=event=>{event.preventDefault();run('authorWebsite');};
+mountSocialLinks($('#author-socials'),id=>run('authorSocial',{id}));
 $('#ui-language').onchange=()=>run('language',{language:$('#ui-language').value});
 const actionSource=document.querySelector('#profiles .section-head'),profileActions=document.querySelector('#profiles .actions'),headerActions=document.querySelector('header .header-actions');
 const groupActionSource=$('#groups .section-head'),groupDeleteSource=$('#groups .group-tools');

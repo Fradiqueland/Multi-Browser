@@ -2,6 +2,7 @@ import {LANGUAGES,DEFAULT_LANGUAGE,validLanguage,normalizeLanguage,languageDirec
 import {EXTRA_TRANSLATIONS} from './locales.mjs';
 export {LANGUAGES,DEFAULT_LANGUAGE,validLanguage,normalizeLanguage,languageDirection};
 export const MESSAGES=[
+["Redes sociais","Social media","Redes sociales","Réseaux sociaux","Social media"],
 ["Ocupado","Busy","Ocupado","Occupé","Occupato"],
 ["Aguarde que a operação deste perfil termine.","Wait for this profile operation to finish.","Espera a que termine la operación de este perfil.","Attendez la fin de cette opération du profil.","Attendi il completamento dell’operazione su questo profilo."],
  ["As novas extensões locais do modo integrado são guardadas com os dados portáteis; a pasta original deixa de ser necessária.","New local extensions in embedded mode are saved with portable data; the original folder is no longer needed.","Las nuevas extensiones locales del modo integrado se guardan con los datos portátiles; la carpeta original deja de ser necesaria.","Les nouvelles extensions locales du mode intégré sont enregistrées avec les données portables ; le dossier original n’est plus nécessaire.","Le nuove estensioni locali in modalità integrata vengono salvate con i dati portatili; la cartella originale non è più necessaria."],

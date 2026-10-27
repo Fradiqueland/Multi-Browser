@@ -1,5 +1,6 @@
 // Hindi, Arabic, Simplified Chinese, Bengali, Russian, Indonesian.
 export const EXTRA_TRANSLATIONS={
+"Social media":["सोशल मीडिया","وسائل التواصل الاجتماعي","社交媒体","সামাজিক মাধ্যম","Социальные сети","Media sosial"],
 "Busy":["व्यस्त","مشغول","忙碌","ব্যস্ত","Занят","Sibuk"],
 "Wait for this profile operation to finish.":["इस प्रोफ़ाइल की कार्रवाई पूरी होने तक प्रतीक्षा करें।","انتظر حتى تكتمل عملية هذا الملف الشخصي.","请等待此配置文件的操作完成。","এই প্রোফাইলের কাজ শেষ হওয়া পর্যন্ত অপেক্ষা করুন।","Дождитесь завершения операции с этим профилем.","Tunggu hingga operasi profil ini selesai."],
  "New local extensions in embedded mode are saved with portable data; the original folder is no longer needed.": ["एम्बेडेड मोड में नए स्थानीय एक्सटेंशन पोर्टेबल डेटा के साथ सहेजे जाते हैं; मूल फ़ोल्डर की अब आवश्यकता नहीं है।","تُحفظ الإضافات المحلية الجديدة في الوضع المدمج مع البيانات المحمولة؛ ولم يعد المجلد الأصلي مطلوبًا.","内嵌模式下新添加的本地扩展会随便携数据保存，无需再保留原始文件夹。","এম্বেডেড মোডে নতুন স্থানীয় এক্সটেনশন পোর্টেবল ডেটার সঙ্গে সংরক্ষিত হয়; মূল ফোল্ডারটি আর প্রয়োজন হয় না।","Новые локальные расширения во встроенном режиме сохраняются вместе с переносимыми данными; исходная папка больше не нужна.","Ekstensi lokal baru dalam mode tertanam disimpan bersama data portabel; folder asal tidak lagi diperlukan."],
