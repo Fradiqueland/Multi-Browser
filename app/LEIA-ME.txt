@@ -1,0 +1,322 @@
+Multi-Browser 0.21.0
+
+SERVICE WORKERS E CACHE OFFLINE
+Service workers classicos e modulos recebem idioma, fuso, User-Agent e
+restricoes do perfil antes do primeiro script. O teste inclui instalacao,
+ativacao, pedidos reais, cache offline, isolamento, reabertura, atualizacao
+e remocao. As extensoes Manifest V3 conservam as suas APIs nativas.
+Push, sincronizacao em segundo plano e notificacoes nao foram verificados
+individualmente neste bloco.
+
+CAMINHOS PORTATEIS NO WINDOWS
+A cache de sites funciona tambem nas pastas profundas testadas no Windows.
+Todos os dados continuam na pasta portatil original. O Chromium usa uma
+ligacao temporaria curta e estavel, sem copiar ou migrar os perfis.
+A ligacao e validada antes de cada arranque e nao exige instalacao nem
+permissoes de administrador. A versao macOS conserva o caminho direto.
+
+WORKERS DO CHROMIUM COMPLETO
+Workers dedicados e partilhados de sites sao preparados antes do primeiro
+script, incluindo modulos, workers blob e workers criados por outros workers.
+A verificacao cobre canvas, idioma, fuso e User-Agent com Client Hints.
+Os pedidos HTTP dos scripts usam tambem o User-Agent personalizado.
+Declaracoes de variaveis no site nao interferem nesta inicializacao.
+Cancelar um worker durante o arranque liberta os recursos pendentes.
+Workers de paginas internas e extensoes conservam as APIs nativas.
+Worklets continuam fora desta cobertura especifica.
+A cobertura equivalente no motor integrado ainda nao esta estabelecida.
+
+PAGINAS VAZIAS E FRAMES
+O documento vazio inicial recebe imediatamente os controlos do perfil, sem
+exigir outra navegacao. Os controlos abrangem frames about:blank, srcdoc,
+blob, data e HTTP de outra origem, incluindo frames isolados noutro processo.
+Os frames descendentes sao preparados recursivamente antes do primeiro script.
+A resolucao e aplicada no alvo principal, como exige o Chromium.
+Paginas internas e paginas das extensoes continuam com as suas APIs nativas.
+Isto nao representa cobertura completa de workers nem garantia universal
+de anonimato.
+
+SEPARADORES NATIVOS E EXTENSOES
+Separadores que comecam em Novo separador ou Definicoes recebem os parametros
+do perfil ao navegar para sites. Idioma, fuso e restricoes sao preparados
+antes de executar o primeiro script do site. As restricoes por script ficam
+limitadas a documentos web e paginas vazias; paginas internas e paginas de
+extensoes conservam as suas APIs. O teste inclui navegacao de ida e volta
+e uma extensao MV3 real com chrome.storage, canvas, audio e WebRTC.
+
+ESTADOS E PERSISTENCIA
+Perfis reservados para manutencao aparecem como Ocupado, separadamente de
+Em execucao e Parado. O filtro e a ordenacao incluem os tres estados.
+Abrir, editar e o menu de acoes ficam desativados durante a reserva; a
+contagem de navegadores em execucao deixa de incluir manutencao. Os textos
+novos estao traduzidos nos onze idiomas da interface.
+Editar sem mudar coordenadas e duplicar configuracoes conserva a precisao
+da localizacao existente. Coordenadas novas usam 100 metros, salvo valor
+explicito. A importacao/exportacao continua a conservar a precisao.
+
+OPERACOES DE PERFIS
+Eliminar, limpar, adicionar/remover extensoes e partilhar sessoes reservam
+os perfis envolvidos enquanto ha dialogos ou trabalho pendente. Durante
+essas operacoes, pedidos de abertura ou edicao do mesmo perfil sao recusados.
+Cancelar ou uma falha liberta a reserva. Outros perfis continuam disponiveis.
+A saida aguarda tambem estas operacoes antes de fechar os motores.
+A preparacao do Electron aceita checksums oficiais com asterisco ou espacos,
+confere tambem arquivos em cache e valida os caminhos antes de extrair.
+
+IMPORTACAO E NAVEGACAO
+A navegacao espera pelo carregamento atual mesmo quando a conclusao da
+pagina vazia anterior chega atrasada. O verificador repete doze arranques
+com navegacao imediata atraves da barra e confirma o documento carregado.
+Perfis importados so aparecem depois de os cookies e dados estarem preparados.
+Uma falha nao elimina alteracoes feitas entretanto nos outros perfis ou grupos.
+Os limites sao novamente verificados antes de guardar; importacoes simultaneas
+conservam ambos os resultados. A saida aguarda importacoes em curso antes
+de fechar os motores e guardar as sessoes.
+A barra aceita dominios com porta, localhost e enderecos IPv6 entre parenteses
+retos. Enderecos locais sem esquema usam HTTP; HTTPS explicito e conservado.
+Cookies importados recusam credenciais, portas e delimitadores no dominio,
+e caminhos que possam alterar o destino do cookie.
+
+PORTABILIDADE ENTRE SISTEMAS
+A deteccao do Edge inclui as pastas de programas de 64 e 32 bits.
+AltGr deixa de disparar atalhos de Control na barra do navegador.
+A saida pelo menu do sistema percorre o mesmo fecho protegido do gestor.
+Para preparar candidatos Mac a partir das fontes: node scripts/prepare-macos.mjs
+e python scripts/build-macos.py. Estas ferramentas sao apenas de compilacao;
+nao sao dependencias da utilizacao normal. Nao desative protecoes do macOS.
+
+ARRANQUE E PARTILHA
+A preparacao dos perfis integrados ja nao espera pelo evento de conclusao
+inicial antes de configurar o documento. O idioma, fuso, resolucao e restricoes
+sao preparados antes de abrir o site. Pedidos feitos durante o arranque
+aguardam os parametros; prevalece o ultimo endereco pedido. Uma falha de
+configuracao impede a abertura do site e identifica a etapa que falhou.
+O verificador inclui seis ciclos com separadores principais e em segundo plano.
+A partilha de sessoes Chromium conserva as chaves dos cookies particionados,
+incluindo cookies com o mesmo nome associados a sites diferentes. Estas
+sessoes usam formato 2; formatos anteriores continuam a ser importaveis.
+O modo integrado nao importa cookies particionados. Particoes opacas nao
+podem ser transferidas e sao recusadas sem retirar a separacao entre sites.
+
+PORTABILIDADE E VERIFICACAO
+As novas extensoes locais do modo integrado sao copiadas para data/extensions.
+Pode mover a pasta data com a aplicacao fechada: a identidade dessas extensoes
+mantem-se e a pasta original deixa de ser necessaria. Extensoes antigas que
+usam um caminho externo continuam compativeis; para as tornar transportaveis,
+remova-as pelo gestor e volte a adiciona-las. A copia original nunca e apagada.
+No Chromium completo, as extensoes da loja continuam geridas pelo navegador.
+Extensoes descompactadas carregadas diretamente pelo Chromium podem continuar
+a depender da pasta escolhida. Extensoes que exigem programas nativos externos
+nao se tornam autonomas apenas por estarem instaladas no navegador.
+A partilha de cookies conserva o ambito de dominio exato e de subdominios,
+incluindo cookies __Host. Os servicos dependentes do dispositivo mantem limites.
+O pacote Windows x64 esta sujeito aos testes de execucao locais.
+Existem tambem candidatos macOS Intel (x64) e Apple Silicon (arm64),
+com Electron e Chromium incluidos. Esses candidatos ainda exigem assinatura,
+notarizacao e testes de execucao num Mac antes de serem considerados prontos.
+No Mac, data e .runtime ficam ao lado de Multi-Browser.app, fora do bundle.
+Os atalhos principais usam Command; Control+Tab conserva a troca de separador.
+A descoberta de Chrome/Edge aceita /Applications e ~/Applications.
+No Windows, o caminho dos dados portateis existentes mantem-se.
+A aplicacao e os motores incluidos dispensam instalacoes de Node, Java,
+Python, Chrome ou Edge para a utilizacao normal.
+
+LEGIBILIDADE
+Menus com texto de 17 px, controlos de 14 px e nomes dos perfis de 15 px.
+Contraste reforcado, tabelas mais simples e botoes com maior area de clique.
+A apresentacao adapta-se a janelas pequenas e aos idiomas existentes.
+
+
+IDIOMAS E AUTORIA
+Ingles predefinido nas novas instalacoes. Estao disponiveis ingles, portugues
+europeu, espanhol, frances, hindi, arabe, chines simplificado, bengali, russo
+e indonesio. O italiano anterior continua disponivel. A escolha fica guardada;
+as preferencias existentes sao mantidas. O arabe usa disposicao da direita
+para a esquerda; os enderecos conservam a leitura da esquerda para a direita.
+A fotografia de Antonio Fradique esta incluida para funcionar offline.
+O link Mais Produtos abre https://AntonioFradique.net no navegador do sistema.
+O idioma da interface nao altera o idioma nem as sessoes dos perfis.
+
+
+Abrir: Multi-Browser.cmd no projeto, ou Multi-Browser.exe na versao portatil.
+
+GRUPOS MULTIPLOS E IMPORTACAO/EXPORTACAO
+Cada perfil pode pertencer a varios grupos sem duplicar a identidade nem a
+sessao. No formulario, marque os grupos e use Adicionar grupo para criar mais.
+Os filtros, a pesquisa, as contagens e Abrir grupo incluem todas as associacoes.
+Renomear um grupo atualiza os perfis; eliminar um grupo conserva os perfis
+e as restantes associacoes.
+
+Exportar CSV ou JSON na pagina Perfis inclui as configuracoes, associacoes
+e descricoes dos grupos. Sem selecao, inclui tambem todos os grupos vazios.
+Com selecao, inclui apenas os perfis escolhidos e os respetivos grupos.
+Na pagina Grupos pode exportar/importar apenas as definicoes dos grupos,
+com descricoes e grupos vazios, em CSV ou JSON.
+A importacao acrescenta perfis com novas identidades, conserva os existentes
+e atualiza as descricoes dos grupos com o mesmo nome. Mantem todos os valores
+exportados: grupos, campos de configuracao, fixacao, datas e contagens.
+O CSV protege texto contra formulas e recupera o texto original na importacao.
+Ficheiros antigos com um grupo por perfil continuam a ser aceites.
+Cookies, passwords, extensoes e historico nao pertencem ao CSV/JSON de
+configuracao. Para sessoes autenticadas use Partilhar sessao encriptada.
+O workspace antigo migra automaticamente, conservando IDs e pastas dos perfis.
+A partir desta versao usa schema 2; versoes anteriores nao leem este formato.
+
+NAVEGADOR COMPLETO E EXTENSOES
+O pacote inclui Chromium portatil completo. Nao precisa de Chrome ou Edge
+instalados para abrir os novos perfis. Tambem pode escolher os motores
+Google Chrome completo ou Microsoft Edge completo quando estejam instalados.
+Os motores instalados sao detetados automaticamente. O navegador abre numa
+janela propria com a sua barra, definicoes, gestor de extensoes e loja nativos.
+Use as acoes do perfil para abrir extensoes, loja, historico, favoritos e downloads.
+Pode instalar extensoes pela loja ou pelo modo de programador do navegador.
+A instalacao e as permissoes sao confirmadas dentro do proprio navegador.
+
+Se uma pagina inicial falhar por erro de rede, o perfil continua aberto na
+pagina de erro do Chromium. Pode navegar para outro endereco sem perder
+a identidade e a sessao do perfil.
+
+Cada perfil utiliza uma pasta exclusiva em data/native-profiles. Nunca e usado
+nem alterado o perfil pessoal do Chrome/Edge. O controlo utiliza pipes privados,
+sem porta de depuracao TCP. O sandbox e as protecoes nativas nao sao desativados.
+Para usar Chromium portable proprio, coloque chrome.exe e os restantes ficheiros
+em .runtime/chromium junto de Multi-Browser.exe (ou na pasta app do projeto).
+Este pacote inclui Electron e Chromium x64. A revisao Chromium e experimental
+(snapshot oficial 1726545, versao 158.0.8123.0), sem atualizacao automatica.
+As atualizacoes sao manuais; Chrome/Edge instalados conservam os seus
+mecanismos de atualizacao. O manifesto da revisao esta na pasta do motor.
+Ao compilar a partir das fontes, execute scripts/prepare-chromium.ps1 primeiro.
+
+INTERFACE E CONTROLOS
+O gestor tem os onze idiomas indicados em IDIOMAS E AUTORIA. A escolha do
+idioma da interface nao altera o idioma dos sites nem os nomes dos seus perfis.
+Em Definicoes pode escolher o estilo Moderno ou Classico e tema claro/escuro.
+Novas instalacoes usam o estilo Classico; a preferencia existente e conservada.
+O estilo Classico coloca as acoes dos perfis e grupos no fundo da janela. A tabela tem
+ordenacao nos dois sentidos, primeira/ultima pagina e salto para uma pagina.
+Os grupos permitem pesquisa, ordenacao, paginacao e selecao da pagina
+ou de todos os resultados filtrados. Renomear um grupo conserva a selecao.
+A tabela de perfis separa numero, abertura, acoes e fixacao. A abertura em
+lote continua se algum perfil falhar e indica os perfis que nao abriram.
+O navegador integrado tem pesquisa com contagem, anterior/seguinte, Enter,
+Shift+Enter e F3; Ctrl+Shift+T reabre o ultimo separador fechado.
+Os motores completos conservam os seus atalhos e menus nativos.
+Nas seccoes Historico, Favoritos e Transferencias, escolha o perfil completo
+e use Abrir no navegador para aceder aos registos reais desse motor.
+
+FAVORITOS, HISTORICO E ARRANQUE
+No navegador integrado, a estrela e Ctrl+D abrem um editor de titulo, endereco
+e notas, com Guardar, Cancelar e Remover. O editor apenas altera o perfil que
+o abriu. A estrela indica quando o endereco ja pertence aos favoritos.
+Historico e favoritos do gestor permitem pesquisa, filtro por perfil, ordenacao
+e paginacao. A pesquisa inclui as notas dos favoritos. Limpar historico afeta
+apenas os registos filtrados, em todas as paginas, apos confirmar LIMPAR.
+Nao limpa cookies nem o historico nativo do Chrome/Edge. O historico do gestor
+conserva ate 5000 entradas. Os menus do navegador integrado abrem o gestor
+no contexto do perfil. Pode adicionar, editar e remover ate 10 paginas de
+arranque no formulario; a lista em texto continua disponivel.
+Recuar/Avancar refletem o estado real. Recarregar passa a Parar durante a carga;
+o indicador do zoom permite repor 100%. F5/Ctrl+R, Alt+Setas, Ctrl+0 e Ctrl+D
+funcionam no navegador integrado. Ctrl+P, Ctrl+S, Ctrl+F, Ctrl+W e Ctrl+Shift+B
+funcionam tambem a partir da barra. A pesquisa e conservada por separador.
+F11 alterna ecra inteiro. Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+PageUp/PageDown e
+Ctrl+1 a Ctrl+9 mudam de separador; Ctrl+9 escolhe o ultimo. Ctrl+Shift+W
+fecha a janela do perfil. O botao central fecha o separador apontado.
+O menu de contexto do separador permite duplicar, recarregar, silenciar,
+mover, fechar os outros ou os separadores a direita. Cada comando afeta
+apenas a janela do respetivo perfil; duplicar nao transfere dados entre perfis.
+
+MENUS E LIGACOES
+O botao direito oferece acoes para ligacoes, imagens, multimedia, texto e
+campos editaveis. Pode copiar enderecos, guardar ficheiros e pesquisar uma
+selecao. Anular, refazer, cortar, copiar, colar sem formatacao e selecionar
+tudo respeitam as capacidades do campo. A barra de endereco tem menu proprio.
+Ctrl+clique, botao central e Abrir ligacao num novo separador conservam o
+separador atual. Abrir ligacao e mudar de separador ativa o novo documento.
+Passar sobre uma ligacao mostra o destino. Comandos de um documento anterior
+sao ignorados depois de navegar. Enderecos com credenciais ou esquemas
+executaveis nao sao abertos nem transferidos pelos menus.
+scripts/verify-context.ps1 permite verificar estes fluxos separadamente.
+
+PERFIS EXISTENTES
+Conservam o modo Integrado (Electron) e os dados anteriores. Mudar de motor
+nao migra automaticamente a sessao: cada motor tem armazenamento proprio.
+O modo integrado continua com suporte parcial de extensoes descompactadas.
+Nos motores completos, extensoes, historico, favoritos, passwords e downloads
+sao geridos pelas paginas nativas; os registos do gestor nao sao uma copia
+sincronizada dos registos internos do Chrome/Edge.
+
+IDENTIDADE E DADOS
+Idioma de HTTP e APIs, fuso, coordenadas, User-Agent, Client Hints para agentes
+Chromium e resolucao sao configuraveis por perfil. Os interruptores Aplicar
+fuso horario e Aplicar localizacao permitem desativar a substituicao sem
+apagar os valores guardados. Localizacao desativada nao concede permissoes
+automaticamente aos sites. Restricoes opcionais de
+Canvas, WebGL, fontes, audio e WebRTC podem afetar sites. Trabalhadores Web
+nao estao cobertos integralmente. Nao se garante anonimato nem ausencia de bans.
+As coordenadas nao mudam o IP. Proxy HTTP/HTTPS/SOCKS4/SOCKS5; autenticacao
+SOCKS nao suportada. Segredos de proxy protegidos pelo Windows, sem argumentos
+de processo que contenham passwords.
+
+PARTILHA ENCRIPTADA
+A exportacao normal JSON/CSV inclui configuracoes, sem cookies ou passwords.
+Partilhar sessao exige fechar o perfil e uma palavra-passe de 12 caracteres.
+Nos motores completos inclui cookies, LocalStorage, IndexedDB, Session Storage
+e armazenamento de sites/service workers. Os ficheiros de armazenamento sao
+transferidos sem converter os valores IndexedDB para JSON. A partilha admite
+os formatos de armazenamento dos sites em LevelDB e SQLite. A reposicao de
+SessionStorage entre novos separadores nao esta garantida.
+Nao inclui passwords guardadas, extensoes, historico nem chaves do Windows.
+A autenticao dependente do dispositivo pode nao ser transferivel.
+A sessao importada usa uma identidade nova e o mesmo motor, em versao igual
+ou mais recente. Limites: 128 MiB de dados de sites, 16 MiB comprimidos,
+20000 ficheiros; ficheiro encriptado final ate 30 MiB. Nao copie perfis abertos.
+No modo integrado, a partilha continua limitada aos cookies.
+
+TESTES
+scripts/verify-desktop.ps1 executa testes de dominio, Chromium completo,
+extensao Manifest V3 real, integracoes HTTP e interface. O resultado final deve
+ser MULTIBROWSER_DESKTOP_OK. Cada processo tem limite e pasta de teste propria.
+scripts/verify-interface.ps1 executa apenas a verificacao da interface,
+com limite global e exigencia de encerramento normal.
+tests/native-load.test.mjs verifica dez motores simultaneos em perfis descartaveis.
+O fecho normal aguarda documentos, cookies e ligacoes antes de terminar Electron.
+O processo Chromium pode demorar ate 45 segundos a guardar e terminar sob
+carga. Um erro nao bloqueia uma segunda tentativa nem impede tratar os outros
+perfis. Os dados de um perfil aberto ou em fecho continuam protegidos contra
+alteracoes e eliminacao. tests/native-lifecycle.test.mjs verifica este fluxo
+com dez perfis, uma janela Windows e compressao simultanea.
+
+ATUALIZAR
+Feche o gestor e todos os perfis antes de copiar a pasta data para uma nova
+versao portatil. Credenciais protegidas pelo Windows podem exigir nova introducao
+noutro computador. A instalacao original do Logii nao e alterada.
+
+Implementacao independente. A equivalencia visual integral com Logii e os
+servicos comerciais de conta/equipas ainda nao estao concluidos.
+
+
+PACOTE MAC UNICO (0.21.0)
+Multi-Browser-0.21.0-mac-unified-candidate.zip inclui Intel e Apple Silicon.
+Extraia tudo e abra Multi-Browser.app; a arquitetura e escolhida automaticamente.
+Requer macOS 13+. Electron e Chromium estao incluidos no bundle.
+A pasta data fica ao lado da app, fora do bundle, para ambas as arquiteturas.
+Candidato com verificacao estrutural; execucao real, assinatura e notarizacao pendentes.
+
+
+MAC: UM UNICO ZIP E UMA UNICA APP
+O ficheiro dist/Multi-Browser-0.21.0-mac.zip nao tem partes .z01.
+Ao extrair apresenta apenas Multi-Browser.app, com os dois motores incluidos.
+Intel ou Apple Silicon e escolhido automaticamente. Requer macOS 13+.
+As instrucoes e o manifesto estao dentro de Contents/Resources da app.
+Ao abrir, data e criada ao lado da app para conservar opcoes e sessoes.
+O candidato continua sem assinatura/notarizacao e requer teste num Mac real.
+
+
+DISTRIBUICAO MAC EM DMG
+Ficheiro unico: dist/Multi-Browser-0.21.0-mac.dmg (Intel + Apple Silicon).
+Abra o DMG e copie Multi-Browser.app para uma pasta local com permissao de escrita.
+Para uso portatil escolha uma pasta no diretorio pessoal. Nao abra diretamente
+na imagem de disco, que e apenas de leitura. A pasta data fica ao lado da app copiada.
+Integridade UDIF/HFSX, conteudos, permissoes e ligacoes foram verificados.
+Execucao num Mac real, assinatura e notarizacao Apple continuam pendentes.

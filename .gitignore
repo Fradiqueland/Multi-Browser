@@ -1,0 +1,21 @@
+# Private portable state and development/runtime output
+**/data/
+**/node_modules/
+**/.runtime/
+**/.cache/
+**/dist/
+**/test-results/
+**/reference/
+**/tests/store-*/
+**/__pycache__/
+*.pyc
+*.syso
+*.partial
+.env
+.env.*
+!.env.example
+*.key
+*.p12
+*.pfx
+.DS_Store
+Thumbs.db

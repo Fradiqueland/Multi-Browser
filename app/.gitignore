@@ -1,0 +1,6 @@
+data/
+.runtime/
+dist/
+node_modules/
+test-results/
+tests/store-*/

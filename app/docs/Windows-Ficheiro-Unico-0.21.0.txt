@@ -1,0 +1,26 @@
+Multi-Browser 0.21.0 — Windows, ficheiro único
+==============================================
+
+Abra Multi-Browser-0.21.0-Windows-Portable.exe com dois cliques.
+Inclui o gestor, Electron e o Chromium completo; não exige instalações adicionais.
+
+Na primeira abertura, uma janela informa que a aplicação está a ser preparada.
+Os componentes são extraídos para a cache local do utilizador:
+%LOCALAPPDATA%\AntonioFradique\Multi-Browser\single-file-runtime
+As aberturas seguintes reutilizam e validam esses componentes.
+
+As opções, perfis, cookies e sessões são guardados na pasta "data",
+ao lado do EXE. Esta pasta é criada quando a aplicação é utilizada.
+Para transportar a aplicação e os seus dados, feche-a e copie o EXE
+juntamente com a pasta "data". Não apague essa pasta para manter os perfis.
+
+Pode utilizar os dados de uma versão portable anterior: com a aplicação
+fechada, coloque o novo EXE junto da pasta "data" dessa versão.
+Faça primeiro uma cópia de segurança da pasta completa.
+Credenciais protegidas pelo Windows podem exigir nova introdução noutro PC.
+
+Não é um instalador. Não necessita de privilégios de administrador.
+Utilize uma pasta com permissão de escrita.
+O EXE ainda não tem uma assinatura Authenticode do editor.
+
+A versão para Mac não foi alterada por este empacotamento.
