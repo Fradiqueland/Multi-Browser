@@ -1,0 +1,66 @@
+Multi-Browser 0.21.3 - Windows EXE installer
+
+Multi-Browser-0.21.3-Windows-Setup.exe is a genuine NSIS installer for the
+Electron application, with the full Chromium browser bundled as well.
+It does not wrap or require the separately provided MSI installer.
+
+Installation
+1. Close Multi-Browser and all of its browser profiles.
+2. If the earlier MSI edition is installed, uninstall that edition in Windows
+   Settings > Apps first. Its data folder is designed to remain in place.
+3. Open Setup.exe and choose the destination. The default is
+   %LOCALAPPDATA%\Programs\Multi-Browser for the current Windows user.
+4. Complete the wizard. Desktop and Start menu shortcuts open the installed
+   Multi-Browser.exe directly. A Windows uninstall entry is also created.
+
+The application requires 64-bit Windows. Node.js, Electron, Chrome, .NET and
+the Windows Installer service are not separate end-user prerequisites for
+this EXE. All application/runtime files are embedded in the installer.
+The NSIS setup engine itself uses the standard x86 Unicode stub.
+
+Profiles and sessions
+The installed application stores its state in data beside Multi-Browser.exe.
+Installer-owned files are explicitly enumerated. The uninstaller is designed
+to remove those files and empty directories, leaving data and other user files.
+Never delete data to perform an application update.
+
+Data from a separate portable edition is not imported automatically. Close
+both copies before copying the complete portable data folder to the installed
+application directory. Back up an existing destination data folder first.
+Credentials protected by Windows may not transfer to a different computer.
+
+Build from the verified portable release
+With Python 3.11 or newer on Windows, put the original
+Multi-Browser-0.21.3-Windows-Portable.exe in app/dist, then run:
+
+  python app/scripts/prepare-nsis-toolchain.py
+  python app/scripts/build-electron-installer.py
+
+The portable source is checked against its pinned SHA256. Each of its 388
+application/runtime files is checked against the embedded manifest before
+being included. Existing Setup.exe output is deliberately not overwritten.
+The build also creates a separate tiny Test-Setup.exe with isolated registry
+keys and shortcut locations. Its fake application fixture must never be run.
+
+Build tools are downloaded into app/.cache/electron-installer and verified
+against pinned hashes. The normal route uses the official NSIS compiler.
+If that x86 build tool cannot execute in the build environment, the preparation
+script can compile an x64 host compiler using installed Visual C++ and the
+Windows SDK. This fallback changes the build host, not the application payload
+or the security configuration of Windows.
+
+Validation status at publication
+The production NSIS package compiled successfully, and a full 7-Zip archive
+integrity test passed. Its observed SHA256 is:
+3f236307c9303744df21c70857e5d2ed78e17802a41a134d548264ad1d3dd2c2
+Size: 533748128 bytes.
+
+An independent comparison of every file extracted from this Setup.exe, and
+live installation, update, shortcut and uninstall tests, remain pending.
+The Windows build connection became unavailable before those checks finished.
+Successful compilation/archive integrity does not establish successful native
+installation or prove data preservation during a real uninstall.
+
+The package is unsigned. Windows and Mac portable packages remain separate
+deliveries. Release binaries, user data, caches and local verification reports
+are intentionally excluded from the source repository.

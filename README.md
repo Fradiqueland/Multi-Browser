@@ -15,7 +15,24 @@ Browser profile manager for Windows and macOS, created by Antonio Fradique. Avai
 
 This is an independent application. Complete equivalence with every Logii or Chromium feature is not claimed.
 
-## Windows installer
+## Windows EXE installer
+
+`Multi-Browser-0.21.3-Windows-Setup.exe` is a genuine NSIS installer containing the complete Electron application and full Chromium. It installs for the current user into `%LOCALAPPDATA%\Programs\Multi-Browser` by default, provides a directory chooser, and creates Desktop/Start menu shortcuts and an uninstall entry. No separate Node.js, Electron, Chrome or .NET runtime, and no Windows Installer service, is required by this EXE.
+
+The installer is designed to keep the application's `data` directory on update and uninstall, removing only explicitly owned files and empty directories. If the earlier MSI edition is installed, remove it through Windows Settings before installing the EXE edition to avoid overlapping installer ownership. Portable data is not imported automatically.
+
+The NSIS package compiled and passed a full archive integrity test. Independent verification of every extracted file and live installation/update/uninstall tests remain pending: the Windows build connection became unavailable before those checks finished. The package is unsigned. See [EXE installer instructions](app/docs/Windows-EXE-Installer-0.21.3.txt) for details and the artifact checksum.
+
+Place the verified Windows portable release in `app/dist`, then run these build-only commands with Python 3.11 or newer on Windows:
+
+```sh
+python app/scripts/prepare-nsis-toolchain.py
+python app/scripts/build-electron-installer.py
+```
+
+The preparation script pins build-tool hashes and can build an x64 NSIS host compiler using installed Visual C++/Windows SDK if the official x86 build tool cannot run in a restricted environment. These development tools are not required by end users. Existing installer output is preserved rather than overwritten.
+
+### MSI alternative
 
 The single `Multi-Browser-0.21.3-Windows-Setup.msi` installs the complete application, Electron and Chromium into `%LOCALAPPDATA%\Programs\Multi-Browser` by default. It creates Desktop and Start menu shortcuts and a normal Windows uninstall entry. The folder can be changed in the installer. No separate Node.js, Electron, Chrome or .NET installation is required by the end user.
 
