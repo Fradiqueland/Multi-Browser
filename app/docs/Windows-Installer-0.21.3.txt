@@ -1,0 +1,13 @@
+MULTI-BROWSER 0.21.3 - INSTALADOR WINDOWS
+
+1. Abre Multi-Browser-0.21.3-Windows-Setup.msi e segue o assistente.
+2. A pasta predefinida e: %LOCALAPPDATA%\Programs\Multi-Browser
+3. Serao criados atalhos no ambiente de trabalho e no menu Iniciar.
+4. A aplicacao inclui Electron e Chromium: nao exige Node.js, Electron, Chrome ou .NET instalados separadamente.
+5. Os perfis e sessoes ficam em data dentro da pasta de instalacao. Atualizacoes e desinstalacao conservam esses dados.
+
+DADOS DA VERSAO PORTABLE:
+A instalacao nao importa automaticamente os dados do portable. Com ambas as aplicacoes fechadas, antes da primeira abertura da versao instalada, podes copiar a pasta data completa do portable para a pasta de instalacao. Se ja existir data com conteudo, guarda uma copia de ambas antes de substituir.
+
+VERIFICACAO:
+Estrutura do instalador, atalhos e os 388 ficheiros incluidos foram verificados. O teste de instalacao real nao foi concluido: o servico Windows Installer nao esta acessivel no ambiente restrito de desenvolvimento. A abertura da aplicacao instalada tambem precisa de confirmacao num Windows normal.

@@ -1,6 +1,6 @@
 # Multi-Browser
 
-Portable browser profile manager for Windows and macOS, created by Antonio Fradique.
+Browser profile manager for Windows and macOS, created by Antonio Fradique. Available as a Windows installer and portable packages.
 
 ## Features
 
@@ -14,6 +14,24 @@ Portable browser profile manager for Windows and macOS, created by Antonio Fradi
 - Nine accessible social links in the author menu, with local SVG icons and fixed HTTPS destinations.
 
 This is an independent application. Complete equivalence with every Logii or Chromium feature is not claimed.
+
+## Windows installer
+
+The single `Multi-Browser-0.21.3-Windows-Setup.msi` installs the complete application, Electron and Chromium into `%LOCALAPPDATA%\Programs\Multi-Browser` by default. It creates Desktop and Start menu shortcuts and a normal Windows uninstall entry. The folder can be changed in the installer. No separate Node.js, Electron, Chrome or .NET installation is required by the end user.
+
+Profiles and sessions remain in the installed folder's `data` directory. Updates use a Windows Installer rollback transaction; uninstall removes only installer-owned files and empty directories, preserving user data. Portable data is not imported automatically: close both copies before transferring the complete `data` folder to the installation directory.
+
+The MSI structure, shortcut destinations, and all 388 embedded file hashes were verified. A live install/repair/uninstall test could not complete in the restricted build environment because the Windows Installer service was unavailable (error 1601). Native installation and application launch still require a normal Windows host check.
+
+To build from the verified portable artifact, place it in `app/dist`, then run these development commands with Python 3 and .NET 6 or later:
+
+```sh
+python app/scripts/prepare-windows-installer.py
+python app/scripts/build-windows-installer.py
+python app/scripts/verify-windows-installer.py --verify-payload
+```
+
+The build tools are not installed or required on the end user's computer. The optional `--install-test` verifier creates a separate test product and redirects shortcuts into its isolated test directory.
 
 ## Portable releases
 
