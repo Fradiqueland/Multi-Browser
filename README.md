@@ -17,11 +17,11 @@ This is an independent application. Complete equivalence with every Logii or Chr
 
 ## Windows EXE installer
 
-`Multi-Browser-0.21.3-Windows-Setup.exe` is a genuine NSIS installer containing the complete Electron application and full Chromium. It installs for the current user into `%LOCALAPPDATA%\Programs\Multi-Browser` by default, provides a directory chooser, and creates Desktop/Start menu shortcuts and an uninstall entry. No separate Node.js, Electron, Chrome or .NET runtime, and no Windows Installer service, is required by this EXE.
+`Multi-Browser-0.21.4-Windows-Setup.exe` is a genuine NSIS installer containing the complete Electron application and full Chromium. It installs for the current user into `%LOCALAPPDATA%\Programs\Multi-Browser` by default, provides a directory chooser, and creates Desktop/Start menu shortcuts and an uninstall entry. No separate Node.js, Electron, Chrome or .NET runtime, and no Windows Installer service, is required by this EXE.
 
 The installer is designed to keep the application's `data` directory on update and uninstall, removing only explicitly owned files and empty directories. If the earlier MSI edition is installed, remove it through Windows Settings before installing the EXE edition to avoid overlapping installer ownership. Portable data is not imported automatically.
 
-The NSIS package compiled and passed a full archive integrity test. Independent verification of every extracted file and live installation/update/uninstall tests remain pending: the Windows build connection became unavailable before those checks finished. The package is unsigned. See [EXE installer instructions](app/docs/Windows-EXE-Installer-0.21.3.txt) for details and the artifact checksum.
+The 0.21.4 installer compiled successfully and all 388 extracted application/runtime files matched the build manifest. Live installation/update/uninstall tests remain pending. The package is unsigned. See [0.21.4 update and validation notes](app/docs/Download-Fix-0.21.4.md) for upgrade instructions, checksums and test coverage.
 
 Place the verified Windows portable release in `app/dist`, then run these build-only commands with Python 3.11 or newer on Windows:
 
@@ -58,11 +58,13 @@ The build tools are not installed or required on the end user's computer. The op
 
 Extract the Mac ZIP on macOS with Archive Utility or `ditto -x -k archive.zip destination`. On Windows use `app/scripts/extract-macos-portable.ps1`; ordinary ZIP extractors may turn symbolic links into text files. The folder must be writable for portable persistence.
 
-The Mac 0.21.2 archive was structurally verified and imported using the Builder's actual import/copy code on Windows. **Opening it on a real Mac has not been tested. The delivery is unsigned and not notarized.** Source changes also invalidate any original application-level runtime signatures; retained signature files do not establish a valid signature for the modified app.
+The Mac 0.21.4 archive contains the download fix for both Intel and Apple Silicon. All 2,654 manifest entries and 38 symbolic links were verified, with native runtime bytes unchanged. **Opening it on a real Mac has not been tested. The delivery is unsigned and not notarized.** Source changes also invalidate any original application-level runtime signatures; retained signature files do not establish a valid signature for the modified app.
 
 Do not commit your `data` folder or share unencrypted profile exports containing private information. OS-protected credentials may not transfer between computers.
 
 ## Source and development
+
+Version 0.21.4 fixes full Chromium closing when a download opens a temporary tab, including redirected attachment downloads. The browser now attaches to the tab container before preparing a separate paused page target, so download-only tabs no longer wait for a JavaScript renderer that may never exist. Real pages still receive profile controls before their first script. The regression test uses local files and does not access a personal Google Drive account.
 
 The `app` directory contains application sources, packaging tools and tests. End-user release runtimes are bundled in the delivery; development runtimes and generated packages are intentionally absent from Git.
 

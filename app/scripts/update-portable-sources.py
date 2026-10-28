@@ -1,5 +1,5 @@
 """Rebuild portable releases from verified prior artifacts without reinstalling runtimes."""
-import argparse,hashlib,importlib.util,json,os,plistlib,shutil,stat,struct,subprocess,tempfile,zipfile
+import argparse,copy,hashlib,importlib.util,json,os,plistlib,shutil,stat,struct,subprocess,tempfile,zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 VERSION=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']
@@ -14,21 +14,42 @@ def module(name,path):
  spec=importlib.util.spec_from_file_location(name,path);result=importlib.util.module_from_spec(spec);spec.loader.exec_module(result);return result
 
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--resume',action='store_true');parser.add_argument('--windows',required=True,type=Path);parser.add_argument('--mac',required=True,type=Path);args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--resume',action='store_true');parser.add_argument('--windows',type=Path);parser.add_argument('--mac',required=True,type=Path);args=parser.parse_args()
  config=json.loads((ROOT/'.cache/portable-go.json').read_text());tools=Path(config['work']);go=Path(config['goRoot'])
+ if args.windows and not (go/'bin/go.exe').is_file():raise FileNotFoundError('Windows launcher rebuild requires the configured Go toolchain')
+ tools.mkdir(parents=True,exist_ok=True)
  work=Path(tempfile.mkdtemp(prefix='source-update-',dir=tools))
  env=dict(os.environ,GOROOT=str(go),GOCACHE=str(tools/'go-build'),GOPATH=str(tools/'gopath'),GOTOOLCHAIN='local',CGO_ENABLED='0')
- tool=work/'zip-overlay.exe';subprocess.run([str(go/'bin/go.exe'),'build','-trimpath','-o',str(tool),str(ROOT/'scripts/mac-artwork-zip.go')],env=env,check=True)
+ tool=None
+ if (go/'bin/go.exe').is_file():
+  tool=work/'zip-overlay.exe';subprocess.run([str(go/'bin/go.exe'),'build','-trimpath','-o',str(tool),str(ROOT/'scripts/mac-artwork-zip.go')],env=env,check=True)
  overlay_dir=work/'overlays';overlay_dir.mkdir(exist_ok=True)
  sources=[p for folder in ['src','ui'] for p in (ROOT/folder).rglob('*') if p.is_file() and not p.is_symlink()]+[ROOT/'package.json']
  def packed_overlay(source,output,overlays):
-  mapping=overlay_dir/(output.stem+'.json');mapping.write_text(json.dumps(overlays),encoding='utf-8')
-  subprocess.run([str(tool),str(source),str(output),str(mapping)],check=True)
+  if tool:
+   mapping=overlay_dir/(output.stem+'.json');mapping.write_text(json.dumps(overlays),encoding='utf-8')
+   subprocess.run([str(tool),str(source),str(output),str(mapping)],check=True)
+   return
+  # Source-only Mac updates need no compiler. Preserve Unix modes and link
+  # payloads directly in the ZIP, without extracting them on Windows.
+  with zipfile.ZipFile(source) as previous,zipfile.ZipFile(output,'x',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as result:
+   seen=set()
+   for original in previous.infolist():
+    info=copy.copy(original);seen.add(info.filename)
+    if info.filename in overlays:
+     replacement=overlays[info.filename];info.create_system=3;info.external_attr=replacement['Mode']<<16
+     result.writestr(info,Path(replacement['File']).read_bytes())
+    else:
+     with previous.open(original) as incoming,result.open(info,'w') as outgoing:shutil.copyfileobj(incoming,outgoing,1024*1024)
+   for name in sorted(set(overlays)-seen):
+    replacement=overlays[name];info=zipfile.ZipInfo(name);info.create_system=3;info.external_attr=replacement['Mode']<<16;info.compress_type=zipfile.ZIP_DEFLATED
+    result.writestr(info,Path(replacement['File']).read_bytes())
  def temporary(name,data):
   path=overlay_dir/name;path.write_bytes(data);return path
  def overlay(path,mode=0o100644):return {'File':str(path),'Mode':mode}
  output=ROOT/'dist'/f'Multi-Browser-{VERSION}-Windows-Portable.exe'
- if output.exists():
+ if args.windows is None:pass
+ elif output.exists():
   if not args.resume:raise FileExistsError('Existing Windows release preserved')
   report=json.loads((ROOT/'reference'/f'windows-single-file-{VERSION}.json').read_text())
   if digest(output)!=report['sha256']:raise ValueError('Existing Windows release checksum mismatch')

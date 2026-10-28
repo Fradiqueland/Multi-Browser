@@ -36,6 +36,7 @@ try {
  $electronRuntime=$runtime
  $runtime=$nodeExe
  $native=Invoke-DesktopCheck ('"'+(Join-Path $appRoot 'tests\native-browser.test.mjs')+'"') 'native-result.json' 'Chromium completo: isolamento, identidade, proxy e partilha'
+ $nativeDownloads=Invoke-DesktopCheck ('"'+(Join-Path $appRoot 'tests\native-download.test.mjs')+'" --headed') 'native-download-result.json' 'Downloads Chromium em separadores novos e com redirecionamentos'
  $background=Invoke-DesktopCheck ('"'+(Join-Path $appRoot 'tests\native-background.test.mjs')+'"') 'background-result.json' 'Service workers, cache offline e persistencia'
  $extensions=Invoke-DesktopCheck ('"'+(Join-Path $appRoot 'tests\native-extension.test.mjs')+'"') 'extension-result.json' 'Extensao Manifest V3 real no Chromium'
  $lifecycle=Invoke-DesktopCheck ('"'+(Join-Path $appRoot 'tests\native-lifecycle.test.mjs')+'"') 'lifecycle-result.json' 'Fecho sob carga, arranque concorrente e recuperacao'
@@ -43,5 +44,5 @@ try {
  $desktop=Invoke-DesktopCheck ('"'+$appRoot+'" --self-test') 'smoke-result.json' 'Integracoes, isolamento, privacidade, proxy e transferencias locais'
  $fixture=Join-Path $appRoot 'tests\rea-ui'
  $interface=Invoke-DesktopCheck ('"'+$fixture+'" --ui-suite --ui-test-exit --native-ui-tests') 'ui-checks\ui-result.json' 'Botoes, formularios e controlos do navegador'
- Write-Host "MULTIBROWSER_DESKTOP_OK: $($startup.tests.Count) arranque + $($navigation.tests.Count) navegacao + $($native.tests.Count) Chromium + $($background.tests.Count) background + $($extensions.tests.Count) extensoes + $($lifecycle.tests.Count) ciclo de vida + $($desktop.tests.Count) integracoes + $($interface.tests.Count) interface." -ForegroundColor Green
+ Write-Host "MULTIBROWSER_DESKTOP_OK: $($startup.tests.Count) arranque + $($navigation.tests.Count) navegacao + $($native.tests.Count) Chromium + $($nativeDownloads.tests.Count) downloads Chromium + $($background.tests.Count) background + $($extensions.tests.Count) extensoes + $($lifecycle.tests.Count) ciclo de vida + $($desktop.tests.Count) integracoes + $($interface.tests.Count) interface." -ForegroundColor Green
 } finally {$env:MULTIBROWSER_DATA=$previousData;Pop-Location}

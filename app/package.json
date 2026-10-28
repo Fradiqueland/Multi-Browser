@@ -1,7 +1,7 @@
 {
   "name": "multi-browser",
   "productName": "Multi-Browser",
-  "version": "0.21.3",
+  "version": "0.21.4",
   "private": true,
   "description": "Gestor local com motores Chromium completos e perfis isolados",
   "type": "module",

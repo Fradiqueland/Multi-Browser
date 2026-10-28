@@ -1,4 +1,12 @@
-Multi-Browser 0.21.0
+Multi-Browser 0.21.4
+
+DOWNLOADS NO CHROMIUM COMPLETO
+Downloads que abrem um novo separador, incluindo redirecionamentos usados
+por servicos como o Google Drive, deixam de bloquear a preparacao do
+separador e provocar o fecho do navegador. As paginas continuam a receber
+os parametros e protecoes do perfil antes do primeiro script.
+Validado com ficheiros locais, redirecionamentos e janelas novas. Nao foi
+utilizada uma conta Google Drive pessoal durante os testes.
 
 SERVICE WORKERS E CACHE OFFLINE
 Service workers classicos e modulos recebem idioma, fuso, User-Agent e

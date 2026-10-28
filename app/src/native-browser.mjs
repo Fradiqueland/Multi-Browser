@@ -57,7 +57,7 @@ export class NativeBrowsers {
    await record.cdp.send('Target.setDiscoverTargets',{discover:true});
    // Service workers belong to the browser: attach here only, never again
    // through the page session, which would pause the same target twice.
-   await record.cdp.send('Target.setAutoAttach',{autoAttach:true,waitForDebuggerOnStart:true,flatten:true,filter:[{type:'page'},{type:'iframe'},{type:'worker'},{type:'shared_worker'},{type:'service_worker'},{exclude:true}]});
+   await record.cdp.send('Target.setAutoAttach',{autoAttach:true,waitForDebuggerOnStart:true,flatten:true,filter:[{type:'tab'},{type:'worker'},{type:'shared_worker'},{type:'service_worker'},{exclude:true}]});
    for(const url of urls.length?urls:['about:blank'])await this.navigateRecord(record,safeURL(url));
    record.ready=true;this.changed();return record;
   }catch(error){
@@ -69,7 +69,7 @@ export class NativeBrowsers {
   if(method==='Debugger.paused'&&record.workerPauses?.has(sessionId)){record.workerPauses.get(sessionId).resolve(params);record.workerPauses.delete(sessionId);}
   if(method==='Target.attachedToTarget'){
    const {targetInfo,sessionId:attached}=params;
-   if(!['page','iframe','worker','shared_worker','service_worker'].includes(targetInfo.type))return;
+   if(!['tab','page','iframe','worker','shared_worker','service_worker'].includes(targetInfo.type))return;
    record.targets.set(targetInfo.targetId,{...targetInfo,sessionId:attached});
    const setup=['worker','shared_worker','service_worker'].includes(targetInfo.type)?this.configureWorker(record,attached,targetInfo):this.configure(record,attached,targetInfo);
    record.sessions.set(attached,setup);
@@ -133,6 +133,13 @@ export class NativeBrowsers {
  }
  async configure(record,sessionId,target){
   const send=(method,params={})=>record.cdp.send(method,params,sessionId),p=record.profile;
+  if(target.type==='tab'){
+   // A download popup can have a tab without a JavaScript renderer. Release
+   // its navigation only after arranging a separate, paused page attachment.
+   // Real documents still receive every profile control before their scripts.
+   await send('Target.setAutoAttach',{autoAttach:true,waitForDebuggerOnStart:true,flatten:true,filter:[{type:'page'},{exclude:true}]});
+   await send('Runtime.runIfWaitingForDebugger');return;
+  }
   const {id:isolateId}=await send('Runtime.getIsolateId');
   record.isolateOverrides??=new Map();
   if(!record.isolateOverrides.has(isolateId))record.isolateOverrides.set(isolateId,new Map());
