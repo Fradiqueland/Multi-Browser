@@ -26,7 +26,11 @@ def main():
  for item in expected:
   file=payload/item['Path']
   if file.stat().st_size!=item['Size'] or digest(file)!=item['SHA256']:raise ValueError('Payload mismatch: '+item['Path'])
- if (payload/'resources/app/src/native-browser.mjs').read_bytes()!=(ROOT/'src/native-browser.mjs').read_bytes():raise ValueError('Current download fix missing from installer')
+ for folder in ['src','ui']:
+  for source in (ROOT/folder).rglob('*'):
+   if source.is_file():
+    relative=source.relative_to(ROOT)
+    if (payload/'resources/app'/relative).read_bytes()!=source.read_bytes():raise ValueError('Current source missing from installer: '+relative.as_posix())
  if json.loads((payload/'resources/app/package.json').read_text())['version']!=VERSION:raise ValueError('Application version mismatch')
  result=dict(ok=True,version=VERSION,filesVerified=len(expected),installerSHA256=proof['sha256'],directory=str(destination),installedIntoUserProfile=False)
  (ROOT/'reference'/f'electron-payload-{VERSION}.json').write_text(json.dumps(result,indent=2))

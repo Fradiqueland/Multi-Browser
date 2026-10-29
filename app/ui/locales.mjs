@@ -1,5 +1,7 @@
 // Hindi, Arabic, Simplified Chinese, Bengali, Russian, Indonesian.
+import {STANDARD_MODE_TEXT} from './standard-mode-text.mjs';
 export const EXTRA_TRANSLATIONS={
+...Object.fromEntries(STANDARD_MODE_TEXT.map(row=>[row[1],row.slice(5)])),
 "Social media":["सोशल मीडिया","وسائل التواصل الاجتماعي","社交媒体","সামাজিক মাধ্যম","Социальные сети","Media sosial"],
 "Busy":["व्यस्त","مشغول","忙碌","ব্যস্ত","Занят","Sibuk"],
 "Wait for this profile operation to finish.":["इस प्रोफ़ाइल की कार्रवाई पूरी होने तक प्रतीक्षा करें।","انتظر حتى تكتمل عملية هذا الملف الشخصي.","请等待此配置文件的操作完成。","এই প্রোফাইলের কাজ শেষ হওয়া পর্যন্ত অপেক্ষা করুন।","Дождитесь завершения операции с этим профилем.","Tunggu hingga operasi profil ini selesai."],

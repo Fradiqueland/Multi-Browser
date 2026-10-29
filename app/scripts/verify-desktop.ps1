@@ -23,7 +23,7 @@ try {
  $coreDirectory=Join-Path $appRoot ('test-results\core-'+[guid]::NewGuid().ToString('N'))
  New-Item -ItemType Directory -Path $coreDirectory -Force | Out-Null
  $coreOutput=Join-Path $coreDirectory 'tap.log';$coreErrors=Join-Path $coreDirectory 'stderr.log'
- $coreProcess=Start-Process -FilePath $nodeExe -ArgumentList '--test --test-reporter=tap tests/core.test.mjs tests/groups.test.mjs tests/localization.test.mjs tests/portable-extensions.test.mjs tests/platform.test.mjs tests/profile-import.test.mjs tests/profile-tasks.test.mjs tests/native-path.test.mjs' -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput $coreOutput -RedirectStandardError $coreErrors
+ $coreProcess=Start-Process -FilePath $nodeExe -ArgumentList '--test --test-reporter=tap tests/core.test.mjs tests/groups.test.mjs tests/localization.test.mjs tests/portable-extensions.test.mjs tests/platform.test.mjs tests/profile-import.test.mjs tests/profile-tasks.test.mjs tests/native-path.test.mjs tests/standard-browser.test.mjs tests/plain-browser.test.mjs' -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput $coreOutput -RedirectStandardError $coreErrors
  try {
   [void]$coreProcess.Handle
   if(-not $coreProcess.WaitForExit(30000)){Stop-DesktopCheckProcess $coreProcess;throw 'Tempo limite nos testes de dominio.'}

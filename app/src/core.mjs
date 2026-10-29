@@ -21,10 +21,13 @@ export function validateProfile(input,previous={}){
  const id=previous.id??randomUUID(), name=text(input.name,80);
  const groups=input.groups!==undefined?groupNames(input.groups):input.group!==undefined?groupNames(input.group?[input.group]:[]):profileGroups(previous);
  const engine=input.engine??previous.engine??'embedded';if(!['embedded','chromium','chrome','edge'].includes(engine))throw Error('Motor de navegador invalido.');
+ const launchMode=input.launchMode??previous.launchMode??'managed';
+ if(!['managed','plain'].includes(launchMode))throw Error('Modo de abertura inválido.');
+ if(launchMode==='plain'&&input.proxyPassword)throw Error('O modo normal não suporta credenciais de proxy geridas pela aplicação.');
  if(!name)throw new Error('Indique o nome do perfil.');
  const timezone=text(input.timezone??previous.timezone,100);if(timezone){try{new Intl.DateTimeFormat('en',{timeZone:timezone});}catch{throw new Error('Fuso horário inválido.');}}
- const locale=text(input.locale||'pt-PT',40);try{Intl.getCanonicalLocales(locale);}catch{throw new Error('Idioma inválido.');}
- const width=Number(input.width||1280),height=Number(input.height||800);
+ const locale=text(input.locale||previous.locale||'pt-PT',40);try{Intl.getCanonicalLocales(locale);}catch{throw new Error('Idioma inválido.');}
+ const width=Number(input.width||previous.width||1280),height=Number(input.height||previous.height||800);
  if(!Number.isInteger(width)||width<320||width>3840||!Number.isInteger(height)||height<240||height>2160)throw new Error('Resolução entre 320×240 e 3840×2160.');
  const explicitGeolocation=input.latitude!==undefined||input.longitude!==undefined;
  for(const flag of ['timezoneEnabled','geolocationEnabled'])if(input[flag]!==undefined&&typeof input[flag]!=='boolean')throw Error('Estado de ambiente invalido.');
@@ -45,16 +48,26 @@ export function validateProfile(input,previous={}){
  const startupInput=input.startupPages??previous.startupPages??[];
  const startupPages=(Array.isArray(startupInput)?startupInput:String(startupInput).split(/\r?\n/)).filter(v=>String(v).trim()).map(safeURL);
  if(startupPages.length>10)throw Error('Configure no maximo 10 paginas de arranque.');
- const proxy=proxyConfig(input.proxy);
+ const proxy=proxyConfig(input.proxy??previous.proxy);
  const proxySecret=previous.proxy===proxy&&input.proxyPassword!==null?(previous.proxySecret??''):'';
  if(/^socks[45]:/.test(proxy)&&(input.proxyUser||input.proxyPassword||proxySecret))throw new Error('SOCKS5 com autenticação não é suportado pelo Chromium. Utilize um proxy HTTP.');
- return {id,name,engine,startupMode,startupPages,lastTabs:previous.lastTabs??[],groups,group:groups[0]||'',notes:text(input.notes,2000),color:/^#[0-9a-f]{6}$/i.test(input.color)?input.color:'#7259f7',startURL:safeURL(input.startURL),locale,timezone,timezoneEnabled,geolocationEnabled,width,height,userAgent:text(input.userAgent,800),proxy,proxyUser:text(input.proxyUser,200),proxySecret,geolocation,blockWebRTC:input.blockWebRTC!==false,privacy:Object.fromEntries(['canvas','webgl','audio','fonts','webrtc'].map(key=>[key,(input.privacy??previous.privacy??{})[key]===true])),emulateScreen:input.emulateScreen??previous.emulateScreen??false,pinned:previous.pinned??false,lastOpened:previous.lastOpened??null,useCount:previous.useCount??0,extensions:previous.extensions??[],createdAt:previous.createdAt??new Date().toISOString(),updatedAt:new Date().toISOString()};
+ const profile={id,name,engine,launchMode,startupMode,startupPages,lastTabs:previous.lastTabs??[],groups,group:groups[0]||'',notes:text(input.notes,2000),color:/^#[0-9a-f]{6}$/i.test(input.color)?input.color:'#7259f7',startURL:safeURL(input.startURL),locale,timezone,timezoneEnabled,geolocationEnabled,width,height,userAgent:text(input.userAgent??previous.userAgent,800),proxy,proxyUser:text(input.proxyUser??previous.proxyUser,200),proxySecret,geolocation,blockWebRTC:input.blockWebRTC===undefined?(previous.blockWebRTC??(launchMode!=='plain')):input.blockWebRTC!==false,privacy:Object.fromEntries(['canvas','webgl','audio','fonts','webrtc'].map(key=>[key,(input.privacy??previous.privacy??{})[key]===true])),emulateScreen:input.emulateScreen??previous.emulateScreen??false,pinned:previous.pinned??false,lastOpened:previous.lastOpened??null,useCount:previous.useCount??0,extensions:previous.extensions??[],createdAt:previous.createdAt??new Date().toISOString(),updatedAt:new Date().toISOString()};
+ if(launchMode==='plain')assertPlainProfile({...profile,proxySecret:profile.proxySecret||input.proxySecret});
+ return profile;
 }
+export function assertPlainProfile(profile){
+ if(profile.launchMode!=='plain'||!['chrome','chromium','edge'].includes(profile.engine))throw Error('Selecione um navegador completo para o modo normal.');
+ if(profile.proxyUser||profile.proxySecret||profile.proxyPassword)throw Error('O modo normal não suporta credenciais de proxy geridas pela aplicação.');
+}
+
 export class Store{
  constructor(directory){
   this.directory=directory;mkdirSync(directory,{recursive:true});this.file=join(directory,'workspace.json');
   this.state={schema:2,profiles:[],groups:['Personal','Work'],history:[],bookmarks:[],groupDetails:{},downloads:[],settings:{theme:'dark',language:DEFAULT_LANGUAGE,appearance:'classic'}};
   if(existsSync(this.file)){try{const value=JSON.parse(readFileSync(this.file,'utf8'));if(![1,2].includes(value.schema)||!Array.isArray(value.profiles))throw Error('Formato inválido');this.state={...this.state,...value};this.state.groupDetails??={};this.state.downloads??=[];}catch(e){throw new Error('Não foi possível ler workspace.json. O ficheiro foi preservado: '+e.message);}}
+  // Legacy full profiles use normal browsing in a separate directory. Keep every
+  // saved setting and the original managed data available when switching back.
+  for(const profile of this.state.profiles)if(profile.launchMode===undefined)profile.launchMode=['chrome','chromium','edge'].includes(profile.engine)?'plain':'managed';
   this.state.schema=2;this.state.groups=groupNames(this.state.groups);ensureProfileGroups(this.state,this.state.profiles);
   this.state.settings={appearance:this.state.settings?.appearance==='modern'?'modern':'classic',theme:this.state.settings?.theme==='light'?'light':'dark',language:normalizeLanguage(this.state.settings?.language)};
  }

@@ -1,4 +1,28 @@
-Multi-Browser 0.21.4
+Multi-Browser 0.21.6
+
+UM BOTAO ABRIR PARA OS NAVEGADORES COMPLETOS
+Chromium, Google Chrome e Microsoft Edge usam o mesmo botao Abrir.
+A navegacao normal inicia o motor escolhido sem automacao ou alteracoes
+artificiais de identidade. A nova sessao fica guardada por perfil.
+Perfis antigos sem modo definido passam a navegacao normal, com uma pasta
+separada. Os dados e as configuracoes anteriores continuam conservados.
+Para voltar aos dados anteriores, escolha Com definicoes do perfil na
+edicao do perfil. Nunca sao copiadas sessoes entre estes dois modos.
+O proxy configurado e mantido. Credenciais de proxy geridas pela aplicacao
+exigem o modo personalizado. Sem proxy, usa-se a rede normal do navegador.
+A navegacao normal utiliza as protecoes nativas do navegador; nao aplica
+idioma, fuso, localizacao, User-Agent, resolucao simulada ou restricoes de
+APIs do Multi-Browser. As configuracoes guardadas permanecem disponiveis
+no modo personalizado. O motor integrado Electron conserva esse modo.
+Para encerrar totalmente um navegador normal, use Sair no seu menu.
+
+VALIDACAO DO LOGIN GOOGLE
+O utilizador confirmou login num Chrome com perfil novo e abertura simples.
+Este comportamento foi integrado no botao Abrir dos tres motores completos.
+A aceitacao do Google dentro da nova aplicacao ainda precisa de confirmacao
+por motor. Execucao real no Mac nao foi verificada neste ambiente.
+As descricoes de alteracoes de identidade abaixo referem-se ao modo
+personalizado, com definicoes do perfil.
 
 DOWNLOADS NO CHROMIUM COMPLETO
 Downloads que abrem um novo separador, incluindo redirecionamentos usados

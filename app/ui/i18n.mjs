@@ -1,7 +1,9 @@
 import {LANGUAGES,DEFAULT_LANGUAGE,validLanguage,normalizeLanguage,languageDirection} from '../src/languages.mjs';
 import {EXTRA_TRANSLATIONS} from './locales.mjs';
+import {STANDARD_MODE_TEXT} from './standard-mode-text.mjs';
 export {LANGUAGES,DEFAULT_LANGUAGE,validLanguage,normalizeLanguage,languageDirection};
 export const MESSAGES=[
+...STANDARD_MODE_TEXT.map(row=>row.slice(0,5)),
 ["Redes sociais","Social media","Redes sociales","Réseaux sociaux","Social media"],
 ["Ocupado","Busy","Ocupado","Occupé","Occupato"],
 ["Aguarde que a operação deste perfil termine.","Wait for this profile operation to finish.","Espera a que termine la operación de este perfil.","Attendez la fin de cette opération du profil.","Attendi il completamento dell’operazione su questo profilo."],

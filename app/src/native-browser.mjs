@@ -2,6 +2,7 @@ import {spawn} from 'node:child_process';
 import {existsSync,mkdirSync,lstatSync,realpathSync,rmSync,readFileSync} from 'node:fs';
 import {join,resolve,sep,dirname} from 'node:path';
 import {nativeLaunchDirectory} from './native-path.mjs';
+import {launchStandardBrowser,standardSessionActive,CLOSE_STANDARD} from './standard-browser.mjs';
 import {CDPPipe} from './cdp-pipe.mjs';
 import {bounded,until,settleOperations} from './operations.mjs';
 import {safeURL,startupURLs,validateProfile,matchesProxyAuthority,cookiePartitionKey} from './core.mjs';
@@ -21,22 +22,29 @@ export class NativeBrowsers {
   Object.assign(this,{appRoot,dataRoot,headlessByDefault,decrypt,changed,history,error});this.records=new Map();this.opening=new Map();this.versions=new Map();
  }
  available(){return nativeEngines(this.appRoot).map(({id,name,path,manifestPath})=>{let details={};if(id==='chromium')try{const m=JSON.parse(readFileSync(manifestPath,'utf8').replace(/^\uFEFF/,''));details={version:m.version,revision:m.revision,automaticUpdates:false,channel:'snapshot'};}catch{}return {id,name,...details};});}
- has(id){return this.records.has(id)||this.opening.has(id);}
+ has(id){return this.records.has(id)||this.opening.has(id)||standardSessionActive(this.dataRoot,id);}
+ isStandard(id){return this.records.get(id)?.standard===true||standardSessionActive(this.dataRoot,id);}
  directory(profile){
   if(!/^[0-9a-f-]{36}$/i.test(profile.id))throw Error('Identificador de perfil invalido.');
   if(!['chromium','chrome','edge'].includes(profile.engine))throw Error('Motor Chromium invalido.');
-  return join(resolve(this.dataRoot),'native-profiles',profile.id,profile.engine);
+  return join(resolve(this.dataRoot),'native-profiles',profile.id,profile.engine+(profile.launchMode==='plain'?'-normal':''));
  }
  open(profile,options={}){
   if(this.opening.has(profile.id))return this.opening.get(profile.id);
   if(this.records.has(profile.id)){const record=this.records.get(profile.id);if(record.closing)return Promise.reject(Error('Aguarde o fecho deste perfil antes de o abrir.'));return Promise.resolve(record);}
+  if(standardSessionActive(this.dataRoot,profile.id))return Promise.reject(Error(CLOSE_STANDARD));
   const promise=this.launch(profile,options);this.opening.set(profile.id,promise);
   return promise.finally(()=>this.opening.delete(profile.id));
  }
- async launch(profile,{headless=this.headlessByDefault,urls=startupURLs(profile)}={}){
+ async launch(profile,{headless=this.headlessByDefault,urls=startupURLs(profile),standard=false}={}){
   const engine=nativeEngines(this.appRoot).find(e=>e.id===profile.engine);
   if(!engine)throw Error('Motor '+profile.engine+' indisponivel neste computador.');
   const directory=this.directory(profile);mkdirSync(directory,{recursive:true});
+  if(standard||profile.launchMode==='plain'){
+   const record=await launchStandardBrowser({profile,engine,directory,launchDirectory:profile.launchMode==='plain'?directory:nativeLaunchDirectory(directory),dataRoot:this.dataRoot,onExit:(closed,result)=>{if(this.records.get(profile.id)===closed)this.records.delete(profile.id);if(result.error)this.error(result.error);this.changed();}});
+   if(record.child.exitCode!==null)throw Error('Normal browser did not stay open.');
+   this.records.set(profile.id,record);this.changed();return record;
+  }
   const args=['--user-data-dir='+nativeLaunchDirectory(directory),'--remote-debugging-pipe','--no-startup-window','--no-first-run','--no-default-browser-check','--disable-background-mode','--window-size='+profile.width+','+profile.height,'--lang='+profile.locale,'--accept-lang='+profile.locale];
   if(profile.userAgent)args.push('--user-agent='+profile.userAgent);
   if(headless)args.push('--headless=new');
@@ -167,6 +175,7 @@ export class NativeBrowsers {
   await send('Runtime.runIfWaitingForDebugger');
  }
  async navigateRecord(record,url){
+  if(record.standard)throw Error('Utilize a barra de endereços e os menus da janela do navegador normal.');
   const {targetId}=await record.cdp.send('Target.createTarget',{url:'about:blank',newWindow:![...record.targets.values()].some(t=>t.type==='page')});
   const sessionId=await until(()=>{if(record.cdp.closed)throw Error('Chromium fechou durante o arranque do separador.');return record.targets.get(targetId)?.sessionId;},'preparar separador Chromium',15000);
   await record.sessions.get(sessionId);
@@ -181,15 +190,16 @@ export class NativeBrowsers {
   }
   return {targetId,sessionId,...(result.errorText?{navigationError:result.errorText}:{})};
  }
- async navigate(profile,url){const record=await this.open(profile);return this.navigateRecord(record,safeURL(url));}
- async page(profile,page){const record=await this.open(profile);return this.navigateRecord(record,nativePage(profile.engine,page));}
- async extensionStore(profile){const record=await this.open(profile);return this.navigateRecord(record,profile.engine==='edge'?'https://microsoftedge.microsoft.com/addons/':'https://chromewebstore.google.com/');}
+ async navigate(profile,url){if(profile.launchMode==='plain')throw Error('Utilize a barra de endereços e os menus da janela do navegador normal.');const record=await this.open(profile);return this.navigateRecord(record,safeURL(url));}
+ async page(profile,page){if(profile.launchMode==='plain')throw Error('Utilize a barra de endereços e os menus da janela do navegador normal.');const record=await this.open(profile);return this.navigateRecord(record,nativePage(profile.engine,page));}
+ async extensionStore(profile){if(profile.launchMode==='plain')throw Error('Utilize a barra de endereços e os menus da janela do navegador normal.');const record=await this.open(profile);return this.navigateRecord(record,profile.engine==='edge'?'https://microsoftedge.microsoft.com/addons/':'https://chromewebstore.google.com/');}
  async stop(id){
   if(this.opening.has(id))await this.opening.get(id).catch(()=>{});
-  const record=this.records.get(id);if(!record)return;
+  const record=this.records.get(id);if(!record){if(standardSessionActive(this.dataRoot,id))throw Error(CLOSE_STANDARD);return;}
   return this.closeRecord(record);
  }
  async closeRecord(record){
+  if(record.standard)throw Error(CLOSE_STANDARD);
   if(record.closing)return record.closing;
   record.closing=(async()=>{
    this.remember(record);
@@ -203,6 +213,7 @@ export class NativeBrowsers {
  }
  async stopAll(){const ids=new Set([...this.records.keys(),...this.opening.keys()]);await settleOperations([...ids].map(id=>()=>this.stop(id)),'Fechar motores Chromium');}
  async use(profile,callback){
+  if(profile.launchMode==='plain')throw Error('Neste perfil, utilize os menus do navegador para gerir cookies e sessões.');
   if(this.has(profile.id))throw Error('Feche o perfil antes de alterar os dados.');
   const record=await this.open({...profile},{headless:true,urls:['about:blank']});
   try{return await callback(record);}finally{await this.stop(profile.id);}
@@ -212,8 +223,8 @@ export class NativeBrowsers {
   const probe=validateProfile({name:'Verificacao do motor',engine,startupMode:'blank'});
   try{return await this.use(probe,r=>r.version.product);}finally{this.removeData(probe);}
  }
- async exportStorage(profile){if(this.has(profile.id))throw Error('Feche o perfil antes de partilhar a sessao.');return exportSiteStorage(this.directory(profile),profile.engine);}
- async importStorage(profile,snapshot){if(this.has(profile.id))throw Error('Feche o perfil antes de importar dados.');return importSiteStorage(this.directory(profile),snapshot,profile.engine,await this.engineVersion(profile.engine));}
+ async exportStorage(profile){if(profile.launchMode==='plain')throw Error('Neste perfil, utilize os menus do navegador para gerir cookies e sessões.');if(this.has(profile.id))throw Error('Feche o perfil antes de partilhar a sessao.');return exportSiteStorage(this.directory(profile),profile.engine);}
+ async importStorage(profile,snapshot){if(profile.launchMode==='plain')throw Error('Neste perfil, utilize os menus do navegador para gerir cookies e sessões.');if(this.has(profile.id))throw Error('Feche o perfil antes de importar dados.');return importSiteStorage(this.directory(profile),snapshot,profile.engine,await this.engineVersion(profile.engine));}
  async cookies(profile){
   return this.use(profile,async record=>{
    const {cookies}=await record.cdp.send('Storage.getCookies');

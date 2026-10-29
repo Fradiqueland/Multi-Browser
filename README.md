@@ -15,7 +15,17 @@ Browser profile manager for Windows and macOS, created by Antonio Fradique. Avai
 
 This is an independent application. Complete equivalence with every Logii or Chromium feature is not claimed.
 
-## Windows EXE installer
+## One Open button for full browsers (0.21.6)
+
+Chromium, Google Chrome and Microsoft Edge now use the same **Open** button. Normal browsing is the default for new full profiles, batch-created full profiles and legacy full profiles without a saved launch mode. It uses the selected browser without debugging or identity/API injection and stores a separate persistent session. The original customized profile data and settings are retained; mode selection lives in the profile editor.
+
+Explicit proxy routing and its configured UDP restriction are preserved. Browser/system networking applies when no proxy is configured. Application-managed proxy credentials and managed session-transfer operations require customized mode. The embedded Electron engine remains in customized mode.
+
+The user confirmed Google login with the clean Chrome diagnostic launcher. The integrated behavior is implemented for all three full engines, but actual Google acceptance inside the final app still requires manual confirmation. The broader unit run passed 93 tests, excluding three junction-dependent tests blocked by environment permissions. See [behavior, updating and validation limits](app/docs/Normal-Browsing-0.21.6.md).
+
+Current packages: `Multi-Browser-0.21.6-Windows-Setup.exe` and `Multi-Browser-0.21.6-Mac-Portable.zip`.
+
+## Windows EXE installer (0.21.4 packaging baseline)
 
 `Multi-Browser-0.21.4-Windows-Setup.exe` is a genuine NSIS installer containing the complete Electron application and full Chromium. It installs for the current user into `%LOCALAPPDATA%\Programs\Multi-Browser` by default, provides a directory chooser, and creates Desktop/Start menu shortcuts and an uninstall entry. No separate Node.js, Electron, Chrome or .NET runtime, and no Windows Installer service, is required by this EXE.
 

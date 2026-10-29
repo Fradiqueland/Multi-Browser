@@ -16,6 +16,7 @@ import {randomUUID} from 'node:crypto';
 import {csvImport,csvText,selectedProfiles,saveGroup,takeCSVPassword} from './workspace.mjs';
 import {bounded,closeWindow,closeWebContents,openProfileBatch,settleOperations} from './operations.mjs';
 import {NativeBrowsers} from './native-browser.mjs';
+import {CLOSE_STANDARD} from './standard-browser.mjs';
 import {pageContextItems,editingItems,webLink} from './page-context-menu.mjs';
 import {Store,validateProfile,safeURL,text,encryptBundle,decryptBundle,configurationBundle,importProfileConfiguration,cookieForImport,startupURLs,clearPlan,matchesProxyAuthority} from './core.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
@@ -36,7 +37,7 @@ let manager,store,quitting=false,quitPromise,closingManager=false,quitPrompt=fal
 const nativeBrowsers=new NativeBrowsers({appRoot:root,dataRoot,headlessByDefault:process.argv.includes('--native-ui-tests'),decrypt:secret=>safeStorage.decryptString(Buffer.from(secret,'base64')),changed:()=>{if(store){store.save();broadcast();}},history:(id,url,title)=>{store.history(id,url,title);broadcast();},error:report});
 const browsers=new Map(),sessions=new Map(),trusted=new Set(),webOwners=new Map(),errors=[];
 function profilePath(id){if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('Identificador inválido.');return join(dataRoot,'profiles',id);}
-function publicProfile(p){const {proxySecret,...value}=p;return {...value,hasProxyPassword:!!proxySecret,engine:p.engine||'embedded',busy:profileTasks.has(p.id),running:browsers.has(p.id)||nativeBrowsers.has(p.id)||profileClosures.has(p.id)};}
+function publicProfile(p){const {proxySecret,...value}=p;return {...value,hasProxyPassword:!!proxySecret,engine:p.engine||'embedded',standardRunning:nativeBrowsers.isStandard(p.id),busy:profileTasks.has(p.id),running:browsers.has(p.id)||nativeBrowsers.has(p.id)||profileClosures.has(p.id)};}
 function state(){return {...store.state,profiles:store.state.profiles.map(publicProfile),runtime:{version:applicationVersion,electron:process.versions.electron,chromium:process.versions.chrome,nativeEngines:nativeBrowsers.available()},errors:errors.slice(-10)};}
 function broadcast(){if(manager&&!manager.isDestroyed())manager.webContents.send('workspace-changed',state());for(const b of browsers.values())update(b);}
 function uiText(key){return translate(key,store?.state.settings.language||'en');}
@@ -198,8 +199,8 @@ function tabMenu(record,id){
  const item=(label,command,enabled=true)=>({label:uiText(label),enabled,click:()=>tabCommand(record,id,command).catch(report)});
  Menu.buildFromTemplate([item('Duplicar separador','duplicate'),item('Recarregar','reload'),{label:uiText('Silenciar separador'),type:'checkbox',checked:tab.view.webContents.isAudioMuted(),click:()=>tabCommand(record,id,'mute').catch(report)},{type:'separator'},item('Mover para a esquerda','left',index>0),item('Mover para a direita','right',index<record.tabs.length-1),{type:'separator'},item('Fechar separador','close'),item('Fechar outros separadores','others',record.tabs.length>1),item('Fechar separadores à direita','after',index<record.tabs.length-1)]).popup({window:record.window});
 }
-async function openProfileInner(id){
- const configured=store.get(id);if(configured.engine&&configured.engine!=='embedded'){const record=await nativeBrowsers.open(configured);configured.lastOpened=new Date().toISOString();configured.useCount=(configured.useCount||0)+1;store.save();broadcast();return record;}
+async function openProfileInner(id,options={}){
+ const configured=store.get(id);if(configured.engine&&configured.engine!=='embedded'){const record=await nativeBrowsers.open(configured,options);configured.lastOpened=new Date().toISOString();configured.useCount=(configured.useCount||0)+1;store.save();broadcast();return record;}
  if(browsers.has(id)){const b=browsers.get(id);if(!isTest){b.window.show();b.window.focus();}return b;}
  const p=store.get(id);await sessionFor(p);
  const window=createShell('browser.html',{width:p.width,height:p.height,title:p.name+' · Multi-Browser',minWidth:320,minHeight:240});
@@ -213,13 +214,13 @@ async function openProfileInner(id){
  try{const urls=startupURLs(p);for(const url of urls)await addTab(record,url);p.lastOpened=new Date().toISOString();p.useCount=(p.useCount||0)+1;store.save();broadcast();}catch(e){if(!window.isDestroyed())window.close();throw e;}
  return record;
 }
-async function openProfile(id){
+async function openProfile(id,options={}){
  profileTasks.assertIdle(id);
  if(quitting)throw Error('A aplicacao esta a encerrar.');
  if(profileClosures.has(id))await profileClosures.get(id);
  if(quitting)throw Error('A aplicacao esta a encerrar.');
  if(openingProfiles.has(id))return openingProfiles.get(id);
- const opening=openProfileInner(id);openingProfiles.set(id,opening);
+ const opening=openProfileInner(id,options);openingProfiles.set(id,opening);
  try{return await opening;}finally{openingProfiles.delete(id);}
 }
 
@@ -230,6 +231,7 @@ async function stopProfile(id){
  await profileClosures.get(id);
 }
 async function stopAllProfiles(){
+ if(store.state.profiles.some(p=>nativeBrowsers.isStandard(p.id)))throw Error(CLOSE_STANDARD);
  const ids=new Set([...browsers.keys(),...openingProfiles.keys(),...nativeBrowsers.records.keys(),...nativeBrowsers.opening.keys(),...profileClosures.keys()]);
  await settleOperations([...ids].map(id=>()=>stopProfile(id)),'Fechar perfis');
 }
@@ -315,6 +317,7 @@ async function performProfileImport(data){
  else throw Error('Ficheiro de importação inválido.');
  if(inputs.length>1000||store.state.profiles.length+inputs.length>1000)throw Error('Limite de 1000 perfis.');
  const clean=inputs.map(importProfileConfiguration),importedGroups=validateGroupRecords(bundle.groups??[]);
+ if((bundle.cookies||bundle.siteStorage)&&clean.some(p=>p.launchMode==='plain'))throw Error('Neste perfil, utilize os menus do navegador para gerir cookies e sessões.');
  const importedCookies=bundle.cookies?.map(cookie=>cookieForImport(cookie,{partitioned:clean[0]?.engine!=='embedded'}));
  if(importedCookies?.length>10000)throw Error('Demasiados cookies.');
  await stageProfileImport({store,profiles:clean,groups:importedGroups,prepare:async()=>{
@@ -383,7 +386,8 @@ const actions={
 
  bulkCreate:d=>{
   if(!Array.isArray(d.names)||!d.names.length||d.names.length>100||store.state.profiles.length+d.names.length>1000)throw Error('Crie entre 1 e 100 perfis por lote, até um total de 1000.');
-  const profiles=d.names.map(name=>validateProfile({name,engine:d.engine??'embedded',...(d.groups!==undefined?{groups:d.groups}:{group:d.group||''}),locale:'pt-PT'}));
+  const engine=d.engine??'embedded';
+  const profiles=d.names.map(name=>validateProfile({name,engine,launchMode:engine==='embedded'?'managed':'plain',...(d.groups!==undefined?{groups:d.groups}:{group:d.group||''}),locale:'pt-PT'}));
   const previous=structuredClone(store.state);
   try{store.state.profiles.push(...profiles);ensureProfileGroups(store.state,profiles);store.save();}catch(e){store.state=previous;throw e;}
   broadcast();return {created:profiles.length};
